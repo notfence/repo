@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>notfence repository</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1115;
+      color: #f5f7fa;
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+    }
+    main {
+      width: min(34rem, calc(100% - 2rem));
+      box-sizing: border-box;
+      padding: 2rem;
+      border: 1px solid #303642;
+      border-radius: 1rem;
+      background: #181b21;
+      box-shadow: 0 1rem 3rem rgb(0 0 0 / 25%);
+    }
+    h1 { margin-top: 0; }
+    p { color: #b7bec9; line-height: 1.5; }
+    nav { display: grid; gap: .75rem; margin-top: 1.5rem; }
+    a {
+      padding: .85rem 1rem;
+      border-radius: .65rem;
+      color: white;
+      background: #1769e0;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    code { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>notfence repository</h1>
+    <p>Package repository for Cydia and Sileo.</p>
+    <p>Source URL: <code>https://notfence.github.io/repo/</code></p>
+    <nav>
+      <a href="sileo://source/https://notfence.github.io/repo/">Add to Sileo</a>
+      <a href="cydia://url/https://cydia.saurik.com/api/share#?source=https://notfence.github.io/repo/">Add to Cydia</a>
+    </nav>
+  </main>
+</body>
+</html>

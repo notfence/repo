@@ -1,0 +1,91 @@
+name: Update package repository
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "2/5 * * * *"
+  workflow_dispatch:
+  repository_dispatch:
+    types:
+      - vless-core-release
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Check latest release
+        id: release
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          release_json="$(curl --fail --location --silent --show-error \
+            --retry 3 --retry-all-errors \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/notfence/vless-core-app/releases/latest)"
+
+          asset_id="$(jq -er \
+            '.assets[] | select(.name == "com.vlesscore.app_iphoneos-arm.deb") | .id' \
+            <<<"${release_json}" | head -n 1)"
+
+          if [[ -z "${asset_id}" ]]; then
+            echo "Latest release has no com.vlesscore.app_iphoneos-arm.deb asset" >&2
+            exit 1
+          fi
+
+          deployed_asset_id="$(curl --fail --location --silent --show-error \
+            --max-time 15 https://notfence.github.io/repo/release-asset-id 2>/dev/null || true)"
+
+          if [[ "${EVENT_NAME}" == "schedule" && "${deployed_asset_id}" == "${asset_id}" ]]; then
+            echo "deploy=false" >> "${GITHUB_OUTPUT}"
+            echo "Release asset ${asset_id} is already published"
+          else
+            echo "deploy=true" >> "${GITHUB_OUTPUT}"
+            echo "Publishing release asset ${asset_id}"
+          fi
+
+      - name: Install repository tools
+        if: steps.release.outputs.deploy == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes dpkg-dev bzip2 jq
+
+      - name: Build package repository
+        if: steps.release.outputs.deploy == 'true'
+        run: ./scripts/build-repo.sh
+
+      - name: Upload GitHub Pages artifact
+        if: steps.release.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+      - name: Deploy GitHub Pages
+        if: steps.release.outputs.deploy == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4

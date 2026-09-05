@@ -4,7 +4,9 @@
   "package": "com.vlesscore.app",
   "architecture": "iphoneos-arm",
   "icon": "package-icons/com.vlesscore.app.png",
+  "packageIcon": "file:///Applications/vless-core.app/Icon@2x.png",
   "depiction": "depictions/com.vlesscore.app.json",
+  "cydiaDepiction": "depictions/com.vlesscore.app.html",
   "homepage": "https://github.com/notfence/vless-core-app",
-  "description": "vless-core is a system-wide VLESS client for jailbroken iOS devices. It routes supported device traffic through a selected VLESS configuration and lets you manage standalone configurations and subscriptions."
+  "description": "vless-core is a system-wide VLESS client for jailbroken devices running iOS 6–14. It routes supported device traffic through a selected VLESS configuration and lets you manage standalone configurations and subscriptions."
 }

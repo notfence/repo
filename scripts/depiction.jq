@@ -34,20 +34,19 @@
       class: "DepictionStackView",
       tabname: "Changelog",
       views: [
+        $releases[] as $release |
         {
-          class: "DepictionHeaderView",
-          title: $releaseTitle,
+          class: "DepictionSubheaderView",
+          title: $release.version,
           useBoldText: true
         },
         {
-          class: "DepictionTableTextView",
-          title: "Published",
-          text: $releaseDate
+          class: "DepictionMarkdownView",
+          markdown: $release.notes,
+          useSpacing: true
         },
         {
-          class: "DepictionMarkdownView",
-          markdown: $changelog,
-          useSpacing: true
+          class: "DepictionSeparatorView"
         }
       ]
     }

@@ -84,6 +84,30 @@ github_api_get() {
     -o "${destination}"
 }
 
+github_markdown() {
+  local markdown="$1"
+  local context="$2"
+  local -a headers=(
+    -H "Accept: application/vnd.github+json"
+    -H "Content-Type: application/json"
+    -H "X-GitHub-Api-Version: 2022-11-28"
+  )
+
+  if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+    headers+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+  fi
+
+  jq -cn \
+    --arg text "${markdown}" \
+    --arg context "${context}" \
+    '{text: $text, mode: "gfm", context: $context}' \
+    | curl --fail --location --silent --show-error \
+        --retry 3 --retry-all-errors \
+        "${headers[@]}" \
+        --data-binary @- \
+        https://api.github.com/markdown
+}
+
 manifest_value() {
   local manifest="$1"
   local key="$2"
@@ -282,11 +306,13 @@ for manifest in "${manifest_files[@]}"; do
     if [[ -z "${release_notes}" ]]; then
       release_notes="No changelog was provided for this release."
     fi
+    release_notes_html="$(github_markdown "${release_notes}" "${source_repository}")"
     release_history="$(
       jq -c \
         --arg version "${release_version}" \
         --arg notes "${release_notes}" \
-        '. + [{version: $version, notes: $notes}]' \
+        --arg html "${release_notes_html}" \
+        '. + [{version: $version, notes: $notes, html: $html}]' \
         <<<"${release_history}"
     )"
   done < <(

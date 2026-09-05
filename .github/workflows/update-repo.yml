@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
   repository_dispatch:
     types:
+      - package-release
       - vless-core-release
 
 permissions:
@@ -34,7 +35,7 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Check latest release
+      - name: Check package releases
         id: release
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -42,41 +43,28 @@ jobs:
         run: |
           set -euo pipefail
 
-          release_json="$(curl --fail --location --silent --show-error \
-            --retry 3 --retry-all-errors \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/repos/notfence/vless-core-app/releases/latest)"
+          current_state="$(./scripts/build-repo.sh --state)"
+          deployed_state="$(curl --fail --location --silent --show-error \
+            --max-time 15 https://notfence.github.io/repo/release-state 2>/dev/null || true)"
 
-          asset_id="$(jq -er \
-            '.assets[] | select(.name == "com.vlesscore.app_iphoneos-arm.deb") | .id' \
-            <<<"${release_json}" | head -n 1)"
-
-          if [[ -z "${asset_id}" ]]; then
-            echo "Latest release has no com.vlesscore.app_iphoneos-arm.deb asset" >&2
-            exit 1
-          fi
-
-          deployed_asset_id="$(curl --fail --location --silent --show-error \
-            --max-time 15 https://notfence.github.io/repo/release-asset-id 2>/dev/null || true)"
-
-          if [[ "${EVENT_NAME}" == "schedule" && "${deployed_asset_id}" == "${asset_id}" ]]; then
+          if [[ "${EVENT_NAME}" == "schedule" && "${deployed_state}" == "${current_state}" ]]; then
             echo "deploy=false" >> "${GITHUB_OUTPUT}"
-            echo "Release asset ${asset_id} is already published"
+            echo "All package releases are already published"
           else
             echo "deploy=true" >> "${GITHUB_OUTPUT}"
-            echo "Publishing release asset ${asset_id}"
+            echo "Publishing updated package repository"
           fi
 
       - name: Install repository tools
         if: steps.release.outputs.deploy == 'true'
         run: |
           sudo apt-get update
-          sudo apt-get install --yes dpkg-dev bzip2 jq
+          sudo apt-get install --yes bzip2 jq
 
       - name: Build package repository
         if: steps.release.outputs.deploy == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/build-repo.sh
 
       - name: Upload GitHub Pages artifact

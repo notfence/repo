@@ -1,0 +1,10 @@
+{
+  "sourceRepository": "notfence/vless-core-app",
+  "assetName": "com.vlesscore.app_iphoneos-arm.deb",
+  "package": "com.vlesscore.app",
+  "architecture": "iphoneos-arm",
+  "icon": "package-icons/com.vlesscore.app.png",
+  "depiction": "depictions/com.vlesscore.app.json",
+  "homepage": "https://github.com/notfence/vless-core-app",
+  "description": "vless-core is a system-wide VLESS client for jailbroken iOS devices. It routes supported device traffic through a selected VLESS configuration and lets you manage standalone configurations and subscriptions."
+}
